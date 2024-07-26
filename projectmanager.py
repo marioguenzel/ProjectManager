@@ -1,6 +1,7 @@
 import yaml
 import os
 import inquirer
+import argparse
 
 # Specify the path to the projects.yaml file
 file_path = 'projects.yaml'
@@ -11,22 +12,8 @@ SVNFOLDER = os.path.expanduser('~/ProjectManager/SVN')
 TYPES = ['LINK','GIT','SVN']
 
 ACTIONS = {'LINK': ['open link'], 
-           'GIT': ['git clone', 'code'],
-           'SVN': []}
-
-
-# lnk = projects_data['24 Strike Back Against Self-Suspension']['resources'][1]['link']
-
-# print(lnk)
-# # os.system(f"open -a iterm ~/Testfolder/.")
-# os.system(f"git clone {lnk} ~/Testfolder/.")
-
-# # os.system(f"open {lnk}")
-# # os.system(f"code .")
-
-# # pth = "~/Documents/GIT/SAG/."
-
-# # os.system(f"open  ")
+           'GIT': ['code', 'git clone'],
+           'SVN': ['code', 'svn checkout']}
 
 
 # INQUIRER:
@@ -78,34 +65,64 @@ def make_folder(type,foldername):
 
 def make_action(data, project, resource_id, action):
     resource = data[project]['resources'][resource_id]
+    folder = make_folder(resource['type'], resource['name'])
 
     if action in ['open link',]:
         os.system(f"open {resource['source']}")
+
     elif action in ['code',]:
-        # check if folder exists:
-        if resource['type'] == 'GIT':
-            folder = os.path.join(GITFOLDER,resource['name'])
-        elif resource['type'] == 'SVN':
-            folder = os.path.join(SVNFOLDER,resource['name'])
         if os.path.exists(folder) is True:
             os.system(f"code {folder}")
         else:
-            print('Folder does not exist. Choose another action.')
-            return 2
+            print('Folder does not exist.')
+    
     elif action in ['git clone',]:
-        # check if folder exists:
-        folder = os.path.join(GITFOLDER,resource['name'])
-        breakpoint()
         if os.path.exists(folder) is True:
-            print(f'Folder {folder} already exist. Choose another action.')
-            return 2
+            print(f'Folder {folder} already exist.')
         else:
             os.system(f"git clone {resource['source']} {folder}")
-            return 4
-    else:
-        print('Action not found.')
-        exit()
+    
+    elif action in ['svn checkout',]:
+        if os.path.exists(folder) is True:
+            print(f'Folder {folder} already exist.')
+        else:
+            os.system(f"svn checkout {resource['source']} {folder}")
 
+    else:
+        raise ValueError(f'{action=} not found.')
+    
+    return 4
+
+
+
+def comma_separated_list(value):
+    return [x.strip() for x in value.split(',')]
+
+def show_tags(data):
+    projects_with_tags = [project for project in data.values() if 'tags' in project]
+    tags = set(tag for project in projects_with_tags for tag in project['tags'])
+
+    tags = list(tags)
+    tags.sort()
+
+    print("\n".join(tags))
+    exit()
+
+def filter_data(data,filtertags):
+    new_data = {key: value for key, value in data.items() if all([tag in value.get('tags',[]) for tag in filtertags])}
+    return new_data
+
+def clone_all(data):
+    for project in data.keys():
+        for resource_id in range(len(data[project].get('resources',[]))):
+            if data[project]['resources'][resource_id]['type'] == 'GIT':
+                make_action(data,project,resource_id,'git clone')
+
+def checkout_all(data):
+    for project in data.keys():
+        for resource_id in range(len(data[project].get('resources',[]))):
+            if data[project]['resources'][resource_id]['type'] == 'SVN':
+                make_action(data,project,resource_id,'svn checkout')
 
 
 if __name__ == '__main__':
@@ -113,6 +130,30 @@ if __name__ == '__main__':
     # Open the file and load its contents using the yaml library
     with open(file_path, 'r') as file:
         data = yaml.safe_load(file)
+
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="Manage your projects.")
+    parser.add_argument('--filter', type=comma_separated_list, help='A comma-separated list of words to filter')
+    parser.add_argument('--showtags', action='store_true', help='Show tags that are used in data.')
+    parser.add_argument('--cloneall', action='store_true', help='Clone all GIT repos.')
+    parser.add_argument('--checkoutall', action='store_true', help='Checkout all SVN repos.')
+    args = parser.parse_args()
+
+    if args.filter is not None:
+        data = filter_data(data, args.filter)
+
+    if args.showtags:
+        show_tags(data)
+    
+    if args.cloneall:
+        clone_all(data)
+    
+    if args.checkoutall:
+        checkout_all(data)
+    
+    if args.showtags or args.cloneall or args.checkoutall:
+        exit()
+    
 
     depth = 0
     project = None
