@@ -1,10 +1,11 @@
+#!/usr/bin/env python3.12
 import yaml
 import os
 import inquirer
 import argparse
 
 # Specify the path to the projects.yaml file
-file_path = 'projects.yaml'
+file_path = os.path.expanduser('~/ProjectManager/projects.yaml')
 
 GITFOLDER = os.path.expanduser('~/ProjectManager/GIT')
 SVNFOLDER = os.path.expanduser('~/ProjectManager/SVN')
@@ -72,7 +73,7 @@ def make_action(data, project, resource_id, action):
 
     elif action in ['code',]:
         if os.path.exists(folder) is True:
-            os.system(f"code {folder}")
+            os.system(f"code '{folder}'")
         else:
             print('Folder does not exist.')
     
@@ -80,13 +81,13 @@ def make_action(data, project, resource_id, action):
         if os.path.exists(folder) is True:
             print(f'Folder {folder} already exist.')
         else:
-            os.system(f"git clone {resource['source']} {folder}")
+            os.system(f"git clone {resource['source']} '{folder}'")
     
     elif action in ['svn checkout',]:
         if os.path.exists(folder) is True:
             print(f'Folder {folder} already exist.')
         else:
-            os.system(f"svn checkout {resource['source']} {folder}")
+            os.system(f"svn checkout {resource['source']} '{folder}'")
 
     else:
         raise ValueError(f'{action=} not found.')
