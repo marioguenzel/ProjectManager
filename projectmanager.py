@@ -13,8 +13,8 @@ SVNFOLDER = os.path.expanduser('~/ProjectManager/SVN')
 TYPES = ['LINK','GIT','SVN']
 
 ACTIONS = {'LINK': ['open link'], 
-           'GIT': ['code', 'git clone'],
-           'SVN': ['code', 'svn checkout']}
+           'GIT': ['code', 'iterm', 'git clone'],
+           'SVN': ['code', 'iterm', 'svn checkout']}
 
 
 # INQUIRER:
@@ -66,7 +66,8 @@ def make_folder(type,foldername):
 
 def make_action(data, project, resource_id, action):
     resource = data[project]['resources'][resource_id]
-    folder = make_folder(resource['type'], resource['name'])
+    if resource['type'] in ['SVN', 'GIT']:
+        folder = make_folder(resource['type'], resource['name'])
 
     if action in ['open link',]:
         os.system(f"open {resource['source']}")
@@ -88,6 +89,12 @@ def make_action(data, project, resource_id, action):
             print(f'Folder {folder} already exist.')
         else:
             os.system(f"svn checkout {resource['source']} '{folder}'")
+    
+    elif action in ['iterm',]:
+        if os.path.exists(folder) is True:
+            os.system(f"open -a iterm '{folder}'")
+        else:
+            print('Folder does not exist.')
 
     else:
         raise ValueError(f'{action=} not found.')
