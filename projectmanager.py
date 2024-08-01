@@ -11,11 +11,13 @@ PROJECTS_FILE = os.path.expanduser('~/Documents/MySVN/projects.yaml')
 GITFOLDER = os.path.expanduser('~/ProjectManager/GIT')
 SVNFOLDER = os.path.expanduser('~/ProjectManager/SVN')
 
-TYPES = ['LINK','GIT','SVN']
+TYPES = ['LINK','GIT','SVN', 'ELEMENT', 'FILE']
 
 ACTIONS = {'LINK': ['open link'], 
            'GIT': ['code', 'iterm', 'git clone'],
-           'SVN': ['code', 'iterm', 'svn checkout']}
+           'SVN': ['code', 'iterm', 'svn checkout'],
+           'ELEMENT': ['show channel'],
+           'FILE': ['iterm folder', 'code file']}
 
 
 # INQUIRER:
@@ -77,6 +79,15 @@ def make_action(data, project, resource_id, action):
 
     if action in ['open link',]:
         os.system(f"open '{resource['source']}'")
+    
+    elif action in ['show channel',]:
+        os.system(f"open -a element element://vector/webapp/#/room/\!{resource['source']}")
+    
+    elif action in ['iterm folder',]:
+        os.system(f"open -a iterm {resource['folder']}")
+    
+    elif action in ['code file',]:
+        os.system(f"code {os.path.join(resource['folder'],resource['filename'])}")
 
     elif action in ['code',]:
         if os.path.exists(folder) is True:
