@@ -5,8 +5,9 @@ import inquirer
 import argparse
 
 # Specify the path to the projects.yaml file
-file_path = os.path.expanduser('~/ProjectManager/projects.yaml')
+file_path = os.path.expanduser('~/Documents/MySVN/projects.yaml')
 
+# Specify paths for GIT and SVN
 GITFOLDER = os.path.expanduser('~/ProjectManager/GIT')
 SVNFOLDER = os.path.expanduser('~/ProjectManager/SVN')
 
@@ -34,7 +35,7 @@ def choose_project(data):
 
 def choose_resource(data, project):
     resources = data[project]['resources']
-    options = [f"{src['type']}: {src['name']}, {src['source']}" for src in resources]
+    options = [f"{src['type']}: {src['name']}, {src.get('source','<No Resource>')}" for src in resources]
     questions = [
     inquirer.List('Resource',
                         message="Choose a resource:",
@@ -66,8 +67,13 @@ def make_folder(type,foldername):
 
 def make_action(data, project, resource_id, action):
     resource = data[project]['resources'][resource_id]
+
+    # specify folder
     if resource['type'] in ['SVN', 'GIT']:
-        folder = make_folder(resource['type'], resource['name'])
+        if 'folder' in resource.keys():
+            folder = resource['folder']
+        else:
+            folder = make_folder(resource['type'], resource['name'])
 
     if action in ['open link',]:
         os.system(f"open {resource['source']}")
