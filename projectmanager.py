@@ -5,7 +5,7 @@ import inquirer
 import argparse
 
 # Specify the path to the projects.yaml file
-file_path = os.path.expanduser('~/Documents/MySVN/projects.yaml')
+PROJECTS_FILE = os.path.expanduser('~/Documents/MySVN/projects.yaml')
 
 # Specify paths for GIT and SVN
 GITFOLDER = os.path.expanduser('~/ProjectManager/GIT')
@@ -73,10 +73,10 @@ def make_action(data, project, resource_id, action):
         if 'folder' in resource.keys():
             folder = resource['folder']
         else:
-            folder = make_folder(resource['type'], resource['name'])
+            folder = make_folder(resource['type'], project + '_' + resource['name'])
 
     if action in ['open link',]:
-        os.system(f"open {resource['source']}")
+        os.system(f"open '{resource['source']}'")
 
     elif action in ['code',]:
         if os.path.exists(folder) is True:
@@ -142,16 +142,21 @@ def checkout_all(data):
 if __name__ == '__main__':
 
     # Open the file and load its contents using the yaml library
-    with open(file_path, 'r') as file:
+    with open(PROJECTS_FILE, 'r') as file:
         data = yaml.safe_load(file)
 
     # Parse arguments
     parser = argparse.ArgumentParser(description="Manage your projects.")
-    parser.add_argument('--filter', type=comma_separated_list, help='A comma-separated list of words to filter')
+    parser.add_argument('-f', '--filter', type=comma_separated_list, help='A comma-separated list of words to filter')
     parser.add_argument('--showtags', action='store_true', help='Show tags that are used in data.')
     parser.add_argument('--cloneall', action='store_true', help='Clone all GIT repos.')
     parser.add_argument('--checkoutall', action='store_true', help='Checkout all SVN repos.')
+    parser.add_argument('-pf', '--projectsfile', action='store_true', help='Show location of the "projects.yaml" file.')
     args = parser.parse_args()
+
+    if args.projectsfile:
+        print(PROJECTS_FILE)
+        exit()
 
     if args.filter is not None:
         data = filter_data(data, args.filter)
