@@ -81,7 +81,7 @@ def make_action(data, project, resource_id, action):
         os.system(f"open '{resource['source']}'")
     
     elif action in ['show channel',]:
-        os.system(f"open -a element element://vector/webapp/#/room/\!{resource['source']}")
+        os.system(fr"open -a element element://vector/webapp/#/room/\!{resource['source']}")
     
     elif action in ['iterm folder',]:
         os.system(f"open -a iterm {resource['folder']}")
