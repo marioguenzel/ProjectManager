@@ -219,11 +219,99 @@ if __name__ == 'old__main__':
         #     make_action(data,project)
 
 
+
+TYPES = ['LINK','GIT','SVN', 'ELEMENT', 'FILE']
+
+ACTIONS = {'LINK': ['open link'], 
+           'GIT': ['code', 'iterm', 'git clone'],
+           'SVN': ['code', 'iterm', 'svn checkout'],
+           'ELEMENT': ['show channel'],
+           'FILE': ['iterm folder', 'code file']}
+
+# Resources
+
+class Resource:
+    def __init__(self, name, type, **args):
+        self.name = name
+        self.type = type
+
+    def string(self):
+        return f'{self.type}: {self.name}'
+
+class ResourceLink(Resource):
+    type = 'LINK'
+    def __init__(self, name, source):
+        self.name = name
+        self.source = source
+    
+    def make_action(self, action):
+        if action == 'open link':
+            os.system(f"open '{self.source}'")
+        else: 
+            raise ValueError(f'{action=} not defined.')
+
+class ResourceGit(Resource):
+    type = 'GIT'
+    def __init__(self, name, source=None, folder=None):
+        self.name = name
+        self.source = source
+        self.folder = folder
+    
+    def make_action(self, action):
+        if action == 'open link':
+            os.system(f"open '{self.source}'")
+        else: 
+            raise ValueError(f'{action=} not defined.')
+
+class ResourceSvn(Resource):
+    type = 'SVN'
+    def __init__(self, name, source):
+        self.name = name
+        self.source = source
+    
+    def make_action(self, action):
+        if action == 'open link':
+            os.system(f"open '{self.source}'")
+        else: 
+            raise ValueError(f'{action=} not defined.')
+
+class ResourceElement(Resource):
+    type = 'ELEMENT'
+    def __init__(self, name, source):
+        self.name = name
+        self.source = source
+    
+    def make_action(self, action):
+        if action == 'open link':
+            os.system(f"open '{self.source}'")
+        else: 
+            raise ValueError(f'{action=} not defined.')
+
+class ResourceFile(Resource):
+    type = 'FILE'
+    def __init__(self, name, source):
+        self.name = name
+        self.source = source
+    
+    def make_action(self, action):
+        if action == 'open link':
+            os.system(f"open '{self.source}'")
+        else: 
+            raise ValueError(f'{action=} not defined.')
+
+
+
 class Project:
     def __init__(self, name, tags=[], resources=[]):
         self.name = name
         self.tags = tags
-        self.resources = resources
+        self.resources = []
+        for res in resources:
+            self.resources.append(Resource(**res))
+
+    def string(self):
+        return f'{self.name}'
+
 
 
 from prompt_toolkit import Application
@@ -330,6 +418,124 @@ class ChooseResource:
     pass
 
 
+def listtext(somelist, index=None):
+    if index == None:
+        return ''
+    else:
+        printlist = []
+        for idx, entry in enumerate(somelist):
+            if idx == index:
+                printlist.append('> ' + entry.string())
+            else:
+                printlist.append('  ' + entry.string())
+        text='\n'.join(printlist)
+        return text
+
+
+if __name__=='__main__':
+    with open(PROJECTS_FILE, 'r') as file:
+        data = yaml.safe_load(file)
+        projects = [Project(entry, data[entry].get('tags',[]), data[entry].get('resources',[])) for entry in data.keys()]
+
+    resources = []
+
+    focus_index = 0
+
+    choice_index = [0,0,0]
+    
+    projects_window = Window(content=FormattedTextControl(text='test1'),always_hide_cursor=True)
+    resource_window = Window(content=FormattedTextControl(text='test2'),always_hide_cursor=True)
+    actions_window = Window(content=FormattedTextControl(text='test3'),always_hide_cursor=True)
+
+    def update_windows():
+        if focus_index == 0:
+            projects_window.content.text = listtext(projects,choice_index[0])
+            resource_window.content.text = ''
+            actions_window.content.text = ''
+        elif focus_index == 1:
+            projects_window.content.text = listtext(projects,choice_index[0])
+            resource_window.content.text = listtext(projects[choice_index[0]].resources,choice_index[1])
+            actions_window.content.text = ''
+        elif focus_index == 2:
+            projects_window.content.text = listtext(projects,choice_index[0])
+            resource_window.content.text = listtext(projects[choice_index[0]].resources,choice_index[1])
+            actions_window.content.text = 'test'
+        else:
+            raise ValueError(f'{focus_index=} out of range')
+
+    kb=KeyBindings()
+    @kb.add('c-c')
+    def _exit(event):
+        """Exit"""
+        event.app.exit()
+
+    @kb.add('enter')
+    def _enter(event):
+        global focus_index
+        """Make a choice"""
+        if focus_index <2:
+            focus_index +=1
+            update_windows()
+    
+    @kb.add('right')
+    def _right(event):
+        global focus_index
+        """Make a choice"""
+        if focus_index <2:
+            focus_index +=1
+            update_windows()
+    
+    @kb.add('left')
+    def _left(event):
+        global focus_index
+        """Undo a choice"""
+        if focus_index >0:
+            choice_index[focus_index] = 0
+            focus_index -= 1
+            update_windows()
+    
+    @kb.add('up')
+    def _up(event):
+        global choice_index
+        """Undo a choice"""
+        if choice_index[focus_index] >0:
+            choice_index[focus_index] -= 1
+            update_windows()
+    
+    @kb.add('down')
+    def _down(event):
+        global choice_index
+        """Undo a choice"""
+        if focus_index == 0:
+            if choice_index[0] < len(projects)-1:
+                choice_index[0] += 1
+                update_windows()
+        elif focus_index == 1:
+            if choice_index[1] < len(projects[choice_index[0]].resources)-1:
+                choice_index[1] += 1
+                update_windows()
+        elif focus_index == 2:
+            if choice_index[2] < len(projects[choice_index[0]].resources[choice_index[1]])-1:
+                choice_index[2] += 1
+                update_windows()
+        else:
+            raise ValueError(f'{focus_index=} out of range.')
+
+
+    update_windows()
+
+    root_container = VSplit([projects_window, resource_window, actions_window])
+    app = Application(layout=Layout(root_container), full_screen=True, key_bindings=kb)
+
+
+    app.run()
+
+    # root_container = HSplit([Window(content=FormattedTextControl(text=f'f: filter, r: remove filters\ncurrent filters: {self.filters}'), always_hide_cursor=True, height=2),Window(content=self.textcontrol, always_hide_cursor=True)])
+
+
+
+
+    exit()
 if __name__ == '__main__':
     # testlist = ['eins', 'zwei', 'drei']
 
