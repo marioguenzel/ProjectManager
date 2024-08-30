@@ -67,6 +67,10 @@ class ResourceGit(Resource):
                 os.system(f"git clone {self.source} '{self.folder}'")
         else: 
             raise ValueError(f'{self.actions[index]=} undefined.')
+        
+        # TODO: Add action for deleting folder?
+    
+    # TODO: in string show if folder available or not
 
 class ResourceSvn(Resource):
     type = 'SVN'
@@ -93,6 +97,10 @@ class ResourceSvn(Resource):
                 os.system(f"svn checkout {self.source} '{self.folder}'")
         else: 
             raise ValueError(f'{self.actions[index]=} undefined.')
+        
+        # TODO: Add action for deleting folder?
+
+    # TODO: in string show if folder available or not
 
 class ResourceElement(Resource):
     type = 'ELEMENT'
@@ -342,6 +350,17 @@ if __name__=='__main__':
         
         # Reset action
         manager.action = None
+
+    
+    # TODO: In Resource window: enter = standard action, a or shift+enter for choosing from list of actions (+ allow no action)
+    # TODO: new format for resources:
+    # resources:
+    #     Paper:
+    #         type: GIT
+    #         source: ...
+    #     Notes:
+    #         type: LINK
+    #         source: ...
     
 
 
