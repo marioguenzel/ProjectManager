@@ -361,6 +361,10 @@ if __name__=='__main__':
     #     Notes:
     #         type: LINK
     #         source: ...
+
+    # TODO: Show tags behind project name
+    # TODO: i: resource info
+    
     
 
 
