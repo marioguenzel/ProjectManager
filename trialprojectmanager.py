@@ -179,11 +179,17 @@ class WindowManager:
     def __init__(self, projects: list[Project] = []):
         self.projects_window = Window(content=FormattedTextControl(),always_hide_cursor=True)
         self.resource_window = Window(content=FormattedTextControl(),always_hide_cursor=True)
-        self.actions_window = Window(content=FormattedTextControl(),always_hide_cursor=True)
+        self.actions_window = Window(content=FormattedTextControl(),always_hide_cursor=True)  # TODO: Remove actions window
 
+        self.top_window = None  # TODO: Top text
+        self.bottom_window = None # TODO: Bottom text
+
+        self.all_projects = projects
         self.projects = projects
         self.focus_index = 0
         self.choice_index = [0, 0, 0]
+
+        self.action = None
     
 
     def update_windows(self):
@@ -241,6 +247,23 @@ class WindowManager:
     def make_action(self):
         self.projects[self.choice_index[0]].resources[self.choice_index[1]].make_action(self.choice_index[2])
     
+    def filter(self):
+        filter = prompt('Enter a filter: ', completer=WordCompleter(self.get_tags()))
+        self.projects = [proj for proj in self.projects if filter in proj.tags]
+        self.focus_index = 0
+        self.choice_index = [0, 0, 0]
+    
+    def get_tags(self):
+        tags = list(set(tag for proj in self.projects for tag in proj.tags))
+        tags.sort()
+        return tags
+
+    def reset(self):
+        self.projects = self.all_projects[:]
+        self.focus_index = 0
+        self.choice_index = [0, 0, 0]
+
+    
 if __name__=='__main__':
     with open(PROJECTS_FILE, 'r') as file:
         data = yaml.safe_load(file)
@@ -254,6 +277,7 @@ if __name__=='__main__':
     @kb.add('c-c')
     def _exit(event):
         """Exit"""
+        manager.action = 'quit'
         event.app.exit()
 
     @kb.add('enter')
@@ -285,8 +309,39 @@ if __name__=='__main__':
         """Undo a choice"""
         manager.down()
         manager.update_windows()
+    
+    @kb.add('f')
+    def _filter(event):
+        """Filter"""
+        manager.action = 'filter'
+        event.app.exit()
+    
+    @kb.add('r')
+    def _reset(event):
+        """Reset Filter"""
+        manager.action = 'reset'
+        event.app.exit()
 
     root_container = VSplit([manager.projects_window, manager.resource_window, manager.actions_window])
     app = Application(layout=Layout(root_container), full_screen=True, key_bindings=kb)
-    app.run()
+        
+    while True:    
+        # update windows and run
+        manager.update_windows()
+        app.run()
+
+        # Check action
+        if manager.action == 'quit':
+            quit()
+        elif manager.action == 'filter':
+            manager.filter()
+        elif manager.action == 'reset':
+            manager.reset()
+
+        
+        # Reset action
+        manager.action = None
+    
+
+
 
