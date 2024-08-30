@@ -273,7 +273,8 @@ if __name__=='__main__':
     manager.update_windows()
 
 
-    kb=KeyBindings()
+    kb=KeyBindings() # TODO: different keybindings for left and right window
+
     @kb.add('c-c')
     def _exit(event):
         """Exit"""
