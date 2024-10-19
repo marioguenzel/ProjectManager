@@ -135,13 +135,13 @@ class WindowManager:
                       ].resources[self.choice_index[1]].make_action(index, directory=LOCATION)
 
     def choose_action(self):
-        type = self.projects[self.choice_index[0]
-                             ].resources[self.choice_index[1]].type
-        result = radiolist_dialog(
-            values=enumerate(ACTIONS[type]),
-            title="Radiolist dialog example",
-            text="Please select a color:",
-        ).run()
+        current_resource = self.projects[self.choice_index[0]
+                                         ].resources[self.choice_index[1]]
+        action_name = prompt(f'Choose an action for {current_resource.string()}: ',
+                             completer=WordCompleter(ACTIONS[current_resource.type]))
+        if action_name in ACTIONS[current_resource.type].keys():
+            self.make_action(
+                list(ACTIONS[current_resource.type].keys()).index(action_name))
 
     def keybindings(self):
         # Specify keybindings
