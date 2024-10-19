@@ -49,7 +49,7 @@ class Project:
                 Resource(project=self, name=res, **resources[res]))
 
     def string(self):
-        return f'{self.name}'
+        return f'{self.name} {self.tags}'
 
 
 # === Prompt Toolkit ===
@@ -90,7 +90,7 @@ class WindowManager:
         self.action = None
 
     def update_windows(self):
-        self.top_window.content.text = 'h = help,\tapplied filters = ' + \
+        self.top_window.content.text = 'h = help,    applied filters = ' + \
             str(self.filters)
         if self.focus_index == 0:
             self.projects_window.content.text = listtext(
@@ -265,8 +265,8 @@ if __name__ == '__main__':
 
             kb = manager.keybindings()
 
-            root_container = VSplit(
-                [manager.projects_window, manager.resource_window])
+            root_container = HSplit([manager.top_window, VSplit(
+                [manager.projects_window, manager.resource_window])])
             app = Application(layout=Layout(root_container),
                               full_screen=True, key_bindings=kb)
 
