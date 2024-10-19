@@ -45,7 +45,8 @@ class Project:
         self.tags = tags
         self.resources = []
         for res in resources:
-            self.resources.append(Resource(project=self, **res))
+            self.resources.append(
+                Resource(project=self, name=res, **resources[res]))
 
     def string(self):
         return f'{self.name}'
