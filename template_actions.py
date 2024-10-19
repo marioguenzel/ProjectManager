@@ -1,8 +1,10 @@
-# Define actions for GIT resources
-def git_clone(name, param):
-    import os
-    print(f"Cloning {self.url} on branch {branch}")
-    os.system(f'git clone -b {branch} {self.url}')
+import os
+
+
+# == Define actions for GIT resources ==
+def git_clone(dir, name, type, pname, param):  # TODO: make all actions of that form
+    path = os.path.join(dir, type, pname, name)
+    os.system(f"git clone {param['source']} '{path}'")
 
 
 def git_pull(self):
@@ -10,8 +12,8 @@ def git_pull(self):
     print(f"Pulling from {self.url}")
     subprocess.run(['git', 'pull'], check=True)
 
-# Define actions for SVN resources
 
+# Define actions for SVN resources
 
 def svn_checkout(self, branch="trunk"):
     import os

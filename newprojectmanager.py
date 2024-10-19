@@ -1,141 +1,42 @@
 #!/usr/bin/env python3.12
+import shutil
+from prompt_toolkit.layout.containers import VSplit, Window, HSplit
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.controls import FormattedTextControl
 import yaml
 import os
+import sys
+import argparse
+from pathlib import Path
 
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit import Application
+from prompt_toolkit.shortcuts import radiolist_dialog
 
 
-# Specify the path to the projects.yaml file
-PROJECTS_FILE = os.path.expanduser('~/Documents/MySVN/projects.yaml')
-
-# Specify paths for GIT and SVN
-GITFOLDER = os.path.expanduser('~/ProjectManager/GIT')
-SVNFOLDER = os.path.expanduser('~/ProjectManager/SVN')
-
-
-# === Resources ===
+# === Resources and Projects ===
 
 class Resource:
-    actions = []
-    def __init__(self, name, type, **kwargs):
+    def __init__(self, name, type, project=None, **kwargs):
         self.name = name
         self.type = type
         self.param = kwargs
+        self.project = project
 
-    def string(self):
+    def string(self):  # TODO in brackets if not downloaded yet
+        if self.type == 'GIT' or self.type == 'SVN':
+            try:
+                if not os.path.exists(os.path.join(LOCATION, self.type, self.project.name, self.name)):
+                    return f'({self.type}: {self.name})'
+            except:
+                pass
         return f'{self.type}: {self.name}'
 
-
-def make_action(resource: Resource, action_id):
-    pass
-
-class ResourceLink(Resource):
-    type = 'LINK'
-    actions = ['open link']
-    def __init__(self, name, source, type=None, project=None):
-        self.name = name
-        self.source = source
-    
-    def make_action(self, action):
-        if action == 0:
-            # open link
-            os.system(f"open '{self.source}'")
-        else: 
-            raise ValueError(f'{action=} out of range.')
-
-class ResourceGit(Resource):
-    type = 'GIT'
-    actions = ['code', 'iterm', 'git clone']
-    def __init__(self, name, source=None, folder=None, type=None, project=None):
-        self.name = name
-        self.source = source
-        if folder is not None:
-            self.folder = folder
-        else:
-            self.folder = os.path.join(GITFOLDER, project.name + '_' + self.name)
-    
-    def make_action(self, index):
-        if self.actions[index] == 'code':
-            # code
-            os.system(f"code '{self.folder}'")
-        elif self.actions[index] == 'iterm':
-            # iterm 
-            os.system(f"open -a iterm {self.folder}")
-        elif self.actions[index] == 'git clone':
-            # git clone
-            if self.source is not None:
-                os.system(f"git clone {self.source} '{self.folder}'")
-        else: 
-            raise ValueError(f'{self.actions[index]=} undefined.')
-        
-        # TODO: Add action for deleting folder?
-    
-    # TODO: in string show if folder available or not
-
-class ResourceSvn(Resource):
-    type = 'SVN'
-    actions = ['code', 'iterm', 'svn checkout']
-    def __init__(self, name, source=None, folder=None, type=None, project=None):
-        self.name = name
-        self.source = source
-
-        if folder is not None:
-            self.folder = folder
-        else:
-            self.folder = os.path.join(GITFOLDER, project.name + '_' + self.name)
-    
-    def make_action(self, index):
-        if self.actions[index] == 'code':
-            # code
-            os.system(f"code '{self.folder}'")
-        elif self.actions[index] == 'iterm':
-            # iterm 
-            os.system(f"open -a iterm {self.folder}")
-        elif self.actions[index] == 'svn checkout':
-            # svn checkout
-            if self.source is not None:
-                os.system(f"svn checkout {self.source} '{self.folder}'")
-        else: 
-            raise ValueError(f'{self.actions[index]=} undefined.')
-        
-        # TODO: Add action for deleting folder?
-
-    # TODO: in string show if folder available or not
-
-class ResourceElement(Resource):
-    type = 'ELEMENT'
-    actions = ['show channel']
-    def __init__(self, name, source, folder=None, type=None, project=None):
-        self.name = name
-        self.source = source
-    
-    def make_action(self, index):
-        if self.actions[index] == 'show channel':
-            os.system(fr"open -a element element://vector/webapp/#/room/\!{self.source}")
-        else: 
-            raise ValueError(f'{self.actions[index]=} undefined.')
-
-class ResourceFile(Resource):
-    type = 'FILE'
-    actions = ['iterm folder', 'code file']
-    def __init__(self, name, folder=None, filename='', type=None, project=None):
-        self.name = name
-        self.filename = filename
-        if folder is not None:
-            self.folder = folder
-        else:
-            self.folder = os.path.join(GITFOLDER, project.name + '_' + self.name)
-    
-    def make_action(self, index):
-        if self.actions[index] == 'iterm folder':
-            os.system(f"open -a iterm {self.folder}")
-        elif self.actions[index] == 'code file':
-            os.system(f"code {os.path.join(self.folder,self.filename)}")
-        else: 
-            raise ValueError(f'{self.actions[index]=} undefined.')
-
+    def make_action(self, action_id, directory=None):
+        list(ACTIONS[self.type].values())[action_id](
+            directory, self.name, self.type, self.project.name, self.param)
 
 
 class Project:
@@ -144,216 +45,247 @@ class Project:
         self.tags = tags
         self.resources = []
         for res in resources:
-            if res['type'] == 'LINK':
-                self.resources.append(ResourceLink(project=self, **res))
-            elif res['type'] == 'GIT':
-                self.resources.append(ResourceGit(project=self, **res))
-            elif res['type'] == 'SVN':
-                self.resources.append(ResourceSvn(project=self, **res))
-            elif res['type'] == 'ELEMENT':
-                self.resources.append(ResourceElement(project=self, **res))
-            elif res['type'] == 'FILE':
-                self.resources.append(ResourceFile(project=self, **res))
-            else:
-                raise ValueError(f'Unknown resource type: {res['type']}')
+            self.resources.append(Resource(project=self, **res))
 
     def string(self):
         return f'{self.name}'
 
 
-
 # === Prompt Toolkit ===
-
-from prompt_toolkit import Application
-from prompt_toolkit.layout.containers import VSplit, Window,HSplit
-from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.completion import WordCompleter
-
-
-def listtext(somelist, index=None):
+def listtext(somelist, index=None, active=True):
     printlist = []
     for idx, entry in enumerate(somelist):
         if type(entry) == str:
             entrystr = entry
-        else: 
+        else:
             entrystr = entry.string()
-        if idx == index:
+
+        if idx == index and active is True:
             printlist.append('> ' + entrystr)
+        elif idx == index and active is False:
+            printlist.append('- ' + entrystr)
         else:
             printlist.append('  ' + entrystr)
-    text='\n'.join(printlist)
+    text = '\n'.join(printlist)
     return text
-    
+
+
 class WindowManager:
     def __init__(self, projects: list[Project] = []):
-        self.projects_window = Window(content=FormattedTextControl(),always_hide_cursor=True)
-        self.resource_window = Window(content=FormattedTextControl(),always_hide_cursor=True)
-        self.actions_window = Window(content=FormattedTextControl(),always_hide_cursor=True)  # TODO: Remove actions window
+        self.projects_window = Window(
+            content=FormattedTextControl(), always_hide_cursor=True, ignore_content_width=True)
+        self.resource_window = Window(
+            content=FormattedTextControl(), always_hide_cursor=True, ignore_content_width=True)
 
         self.top_window = None  # TODO: Top text
-        self.bottom_window = None # TODO: Bottom text
+        self.bottom_window = None  # TODO: Bottom text
 
-        self.all_projects = projects
         self.projects = projects
         self.focus_index = 0
-        self.choice_index = [0, 0, 0]
+        self.choice_index = [0, 0]
 
         self.action = None
-    
 
     def update_windows(self):
         if self.focus_index == 0:
-            self.projects_window.content.text = listtext(self.projects,self.choice_index[0])
-            self.resource_window.content.text = listtext(self.projects[self.choice_index[0]].resources, None)
-            self.actions_window.content.text = ''
+            self.projects_window.content.text = listtext(
+                self.projects, self.choice_index[0])
+            self.resource_window.content.text = listtext(
+                self.projects[self.choice_index[0]].resources, None)
         elif self.focus_index == 1:
-            self.projects_window.content.text = listtext(self.projects,self.choice_index[0])
-            self.resource_window.content.text = listtext(self.projects[self.choice_index[0]].resources,self.choice_index[1])
-            self.actions_window.content.text = listtext(self.projects[self.choice_index[0]].resources[self.choice_index[1]].actions, None)
-        elif self.focus_index == 2:
-            self.projects_window.content.text = listtext(self.projects,self.choice_index[0])
-            self.resource_window.content.text = listtext(self.projects[self.choice_index[0]].resources,self.choice_index[1])
-            self.actions_window.content.text = listtext(self.projects[self.choice_index[0]].resources[self.choice_index[1]].actions, self.choice_index[2])
+            self.projects_window.content.text = listtext(
+                self.projects, self.choice_index[0], active=False)
+            self.resource_window.content.text = listtext(
+                self.projects[self.choice_index[0]].resources, self.choice_index[1])
         else:
             raise ValueError(f'{self.focus_index=} out of range')
-    
-    def make_choice(self):
-        if self.focus_index == 0:
-            self.focus_index += 1
-        elif self.focus_index == 1:
-            self.focus_index += 1
-        elif self.focus_index == 2:
-            self.make_action()
-    
-    def revert_choice(self):
-        if self.focus_index == 0:
-            pass
-        elif self.focus_index == 1:
-            self.focus_index -= 1
-            self.choice_index[1] = 0
-        elif self.focus_index == 2:
-            self.focus_index -= 1
-            self.choice_index[2] = 0
-    
+
     def up(self):
         lower_range = 0
         if self.choice_index[self.focus_index] > lower_range:
-            self.choice_index[self.focus_index] -= 1 
+            self.choice_index[self.focus_index] -= 1
 
     def down(self):
         if self.focus_index == 0:
             upper_range = len(self.projects)-1
         elif self.focus_index == 1:
-            upper_range = len(self.projects[self.choice_index[0]].resources) - 1
-        elif self.focus_index == 2:
-            upper_range = len(self.projects[self.choice_index[0]].resources[self.choice_index[1]].actions) - 1
-        else: 
+            upper_range = len(
+                self.projects[self.choice_index[0]].resources) - 1
+        else:
             raise ValueError(f'{self.focus_index=} out of bound.')
+
         if self.choice_index[self.focus_index] < upper_range:
             self.choice_index[self.focus_index] += 1
-            
-    
-    def make_action(self):
-        self.projects[self.choice_index[0]].resources[self.choice_index[1]].make_action(self.choice_index[2])
-    
+
     def filter(self):
-        filter = prompt('Enter a filter: ', completer=WordCompleter(self.get_tags()))
+        filter = prompt('Enter a filter: ',
+                        completer=WordCompleter(self.get_tags()))
         self.projects = [proj for proj in self.projects if filter in proj.tags]
         self.focus_index = 0
-        self.choice_index = [0, 0, 0]
-    
+        self.choice_index = [0, 0]
+
     def get_tags(self):
         tags = list(set(tag for proj in self.projects for tag in proj.tags))
         tags.sort()
         return tags
 
-    def reset(self):
-        self.projects = self.all_projects[:]
-        self.focus_index = 0
-        self.choice_index = [0, 0, 0]
+    def make_action(self, index):
+        self.projects[self.choice_index[0]
+                      ].resources[self.choice_index[1]].make_action(index, directory=LOCATION)
 
-    
-if __name__=='__main__':
-    with open(PROJECTS_FILE, 'r') as file:
-        data = yaml.safe_load(file)
-        projects = [Project(entry, data[entry].get('tags',[]), data[entry].get('resources',[])) for entry in data.keys()]
-    
-    manager = WindowManager(projects)
-    manager.update_windows()
+    def choose_action(self):
+        type = self.projects[self.choice_index[0]
+                             ].resources[self.choice_index[1]].type
+        result = radiolist_dialog(
+            values=enumerate(ACTIONS[type]),
+            title="Radiolist dialog example",
+            text="Please select a color:",
+        ).run()
+
+    def keybindings(self):
+        # Specify keybindings
+        kb = KeyBindings()  # TODO: different keybindings for left and right window
+
+        @kb.add('c-c')
+        def _exit(event):
+            """Exit"""
+            self.action = 'quit'
+            event.app.exit()
+
+        @kb.add('enter')
+        def _enter(event):
+            """Make a choice"""
+            if self.focus_index == 0:
+                self.focus_index = 1
+                self.update_windows()
+            else:
+                self.action = 'enter'
+                event.app.exit()
+
+        @kb.add('right')
+        def _right(event):
+            """Make a choice"""
+            if self.focus_index == 0:
+                self.focus_index = 1
+                self.update_windows()
+            else:
+                self.action = 'enter'
+                event.app.exit()
+
+        @kb.add('left')
+        def _left(event):
+            """Undo a choice"""
+            if self.focus_index == 1:
+                self.focus_index -= 1
+            else:
+                pass
+            self.update_windows()
+
+        @kb.add('up')
+        def _up(event):
+            """Undo a choice"""
+            self.up()
+            self.update_windows()
+
+        @kb.add('down')
+        def _down(event):
+            """Undo a choice"""
+            self.down()
+            self.update_windows()
+
+        @kb.add('f')
+        def _filter(event):
+            """Filter"""
+            self.action = 'filter'
+            event.app.exit()
+
+        @kb.add('r')
+        def _reset(event):
+            """Refresh"""
+            self.action = 'refresh'
+            event.app.exit()
+
+        # TODO: i for info
+
+        # TODO: h for help
+
+        # TODO: q for quit
+
+        # TODO: a for choose action
+
+        # TODO: Show projects-folder
+
+        return kb
 
 
-    kb=KeyBindings() # TODO: different keybindings for left and right window
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
 
-    @kb.add('c-c')
-    def _exit(event):
-        """Exit"""
-        manager.action = 'quit'
-        event.app.exit()
+    parser.add_argument('LOCATION', type=Path,
+                        help='Specify folder.')
+    parser.add_argument('-i', '--init', action='store_true',
+                        help='Initialilze a new project folder.')
 
-    @kb.add('enter')
-    def _enter(event):
-        """Make a choice"""
-        manager.make_choice()
-        manager.update_windows()
-    
-    @kb.add('right')
-    def _right(event):
-        """Make a choice"""
-        manager.make_choice()
-        manager.update_windows()
-    
-    @kb.add('left')
-    def _left(event):
-        """Undo a choice"""
-        manager.revert_choice()
-        manager.update_windows()
-    
-    @kb.add('up')
-    def _up(event):
-        """Undo a choice"""
-        manager.up()
-        manager.update_windows()
-    
-    @kb.add('down')
-    def _down(event):
-        """Undo a choice"""
-        manager.down()
-        manager.update_windows()
-    
-    @kb.add('f')
-    def _filter(event):
-        """Filter"""
-        manager.action = 'filter'
-        event.app.exit()
-    
-    @kb.add('r')
-    def _reset(event):
-        """Reset Filter"""
-        manager.action = 'reset'
-        event.app.exit()
+    args = parser.parse_args()
 
-    root_container = VSplit([manager.projects_window, manager.resource_window, manager.actions_window])
-    app = Application(layout=Layout(root_container), full_screen=True, key_bindings=kb)
-        
-    while True:    
-        # update windows and run
-        manager.update_windows()
-        app.run()
+    LOCATION = args.LOCATION.resolve()
 
-        # Check action
-        if manager.action == 'quit':
-            quit()
-        elif manager.action == 'filter':
-            manager.filter()
-        elif manager.action == 'reset':
-            manager.reset()
+    if args.init:
+        # Get the directory where the script (Python file) is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
 
-        
-        # Reset action
-        manager.action = None
+        for source, destination in [('template_actions.py', 'actions.py'), ('template_projects.yaml', 'projects.yaml')]:
 
-    
+            source_file = os.path.join(script_dir, source)
+            destination_file = os.path.join(LOCATION, destination)
+
+            # Copy the file
+            try:
+                shutil.copy(source_file, destination_file)
+            except FileNotFoundError:
+                print(f"File {source} not found in the script's directory.")
+
+    else:
+        # Config
+        sys.path.insert(0, str(LOCATION))
+        from actions import ACTIONS
+
+        while True:
+            with open(os.path.join(LOCATION, 'projects.yaml'), 'r') as file:
+                data = yaml.safe_load(file)
+                projects = [Project(entry, data[entry].get('tags', []), data[entry].get(
+                    'resources', [])) for entry in data.keys()]
+
+            manager = WindowManager(projects)
+            manager.update_windows()
+
+            kb = manager.keybindings()
+
+            root_container = VSplit(
+                [manager.projects_window, manager.resource_window])
+            app = Application(layout=Layout(root_container),
+                              full_screen=True, key_bindings=kb)
+
+            while True:
+                # update windows and run
+                manager.update_windows()
+                app.run()
+
+                # Check action
+                if manager.action == 'quit':
+                    quit()
+                elif manager.action == 'filter':
+                    manager.filter()
+                elif manager.action == 'refresh':
+                    break
+                elif manager.action == 'enter':
+                    manager.make_action(0)
+                elif manager.action == 'choose action':
+                    manager.choose_action()
+
+                # Reset action
+                manager.action = None
+
     # TODO: In Resource window: enter = standard action, a or shift+enter for choosing from list of actions (+ allow no action)
     # TODO: new format for resources:
     # resources:
@@ -366,8 +298,3 @@ if __name__=='__main__':
 
     # TODO: Show tags behind project name
     # TODO: i: resource info
-    
-    
-
-
-
