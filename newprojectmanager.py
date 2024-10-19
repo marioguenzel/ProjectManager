@@ -78,16 +78,20 @@ class WindowManager:
         self.resource_window = Window(
             content=FormattedTextControl(), always_hide_cursor=True, ignore_content_width=True)
 
-        self.top_window = None  # TODO: Top text
+        self.top_window = Window(
+            content=FormattedTextControl(), height=1, always_hide_cursor=True)
         self.bottom_window = None  # TODO: Bottom text
 
         self.projects = projects
+        self.filters = []
         self.focus_index = 0
         self.choice_index = [0, 0]
 
         self.action = None
 
     def update_windows(self):
+        self.top_window.content.text = 'h = help,\tapplied filters = ' + \
+            str(self.filters)
         if self.focus_index == 0:
             self.projects_window.content.text = listtext(
                 self.projects, self.choice_index[0])
@@ -122,6 +126,7 @@ class WindowManager:
         filter = prompt('Enter a filter: ',
                         completer=WordCompleter(self.get_tags()))
         self.projects = [proj for proj in self.projects if filter in proj.tags]
+        self.filters.append(filter)
         self.focus_index = 0
         self.choice_index = [0, 0]
 
@@ -282,7 +287,7 @@ if __name__ == '__main__':
                 elif manager.action == 'choose action':
                     manager.choose_action()
                 elif manager.action == 'help':
-                    print("\nHelp - Key Bindings Overview")
+                    print("\n=== Help - Key Bindings Overview===")
                     for binding in kb.bindings:
                         keys = ", ".join([str(key) for key in binding.keys])
                         keyentry = binding.handler.__doc__.strip(
