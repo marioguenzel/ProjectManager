@@ -1,0 +1,10 @@
+blessed==1.20.0
+editor==1.6.6
+inquirer==3.3.0
+prompt_toolkit==3.0.47
+PyYAML==6.0.1
+readchar==4.1.0
+runs==1.2.2
+six==1.16.0
+wcwidth==0.2.13
+xmod==1.8.1
