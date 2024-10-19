@@ -206,6 +206,12 @@ class WindowManager:
             self.action = 'refresh'
             event.app.exit()
 
+        @kb.add('a')
+        def _choose_action(event):
+            """Choose an action from list"""
+            self.action = 'choose action'
+            event.app.exit()
+
         # TODO: i for info
 
         # TODO: h for help
