@@ -148,24 +148,16 @@ class WindowManager:
         kb = KeyBindings()  # TODO: different keybindings for left and right window
 
         @kb.add('c-c')
+        @kb.add('q')
         def _exit(event):
             """Exit"""
             self.action = 'quit'
             event.app.exit()
 
+        @kb.add('right')
         @kb.add('enter')
         def _enter(event):
-            """Make a choice"""
-            if self.focus_index == 0:
-                self.focus_index = 1
-                self.update_windows()
-            else:
-                self.action = 'enter'
-                event.app.exit()
-
-        @kb.add('right')
-        def _right(event):
-            """Make a choice"""
+            """Right/Make a choice"""
             if self.focus_index == 0:
                 self.focus_index = 1
                 self.update_windows()
@@ -175,22 +167,23 @@ class WindowManager:
 
         @kb.add('left')
         def _left(event):
-            """Undo a choice"""
+            """Left"""
             if self.focus_index == 1:
                 self.focus_index -= 1
+                self.choice_index[1] = 0
             else:
                 pass
             self.update_windows()
 
         @kb.add('up')
         def _up(event):
-            """Undo a choice"""
+            """Up"""
             self.up()
             self.update_windows()
 
         @kb.add('down')
         def _down(event):
-            """Undo a choice"""
+            """Down"""
             self.down()
             self.update_windows()
 
@@ -209,18 +202,17 @@ class WindowManager:
         @kb.add('a')
         def _choose_action(event):
             """Choose an action from list"""
-            self.action = 'choose action'
-            event.app.exit()
+            if self.focus_index == 1:
+                self.action = 'choose action'
+                event.app.exit()
 
         # TODO: i for info
 
-        # TODO: h for help
-
-        # TODO: q for quit
-
-        # TODO: a for choose action
-
-        # TODO: Show projects-folder
+        @kb.add('h')
+        def _help(event):
+            """Help for keybindings"""
+            self.action = 'help'
+            event.app.exit()
 
         return kb
 
@@ -289,6 +281,26 @@ if __name__ == '__main__':
                     manager.make_action(0)
                 elif manager.action == 'choose action':
                     manager.choose_action()
+                elif manager.action == 'help':
+                    print("\nHelp - Key Bindings Overview")
+                    for binding in kb.bindings:
+                        keys = ", ".join([str(key) for key in binding.keys])
+                        keyentry = binding.handler.__doc__.strip(
+                        ) if binding.handler.__doc__ else 'No description'
+                        if keys == 'Keys.ControlC':
+                            keys = 'control-c'
+                        elif keys == 'Keys.ControlM':
+                            keys = 'enter'
+                        elif keys == 'Keys.Right':
+                            keys = 'right'
+                        elif keys == 'Keys.Left':
+                            keys = 'left'
+                        elif keys == 'Keys.Up':
+                            keys = 'up'
+                        elif keys == 'Keys.Down':
+                            keys = 'down'
+                        print(f"\t{keys} - {keyentry}")
+                    input('Press enter to go back ...')
 
                 # Reset action
                 manager.action = None
