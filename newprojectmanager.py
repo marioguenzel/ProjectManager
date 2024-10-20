@@ -24,7 +24,7 @@ class Resource:
         self.param = kwargs
         self.project = project
 
-    def string(self):  # TODO in brackets if not downloaded yet
+    def string(self):
         if self.type == 'GIT' or self.type == 'SVN':
             try:
                 if not os.path.exists(os.path.join(LOCATION, self.type, self.project.name, self.name)):
@@ -210,7 +210,11 @@ class WindowManager:
                 self.action = 'choose action'
                 event.app.exit()
 
-        # TODO: i for info
+        @kb.add('i')
+        def _choose_action(event):
+            """Show information for a resource/project."""
+            self.action = 'info'
+            event.app.exit()
 
         @kb.add('h')
         def _help(event):
@@ -228,6 +232,8 @@ if __name__ == '__main__':
                         help='Specify folder.')
     parser.add_argument('-i', '--init', action='store_true',
                         help='Initialilze a new project folder.')
+    parser.add_argument('-a', '--all', nargs=2, metavar=['TYPE', 'ACTION'],
+                        help='Apply an action to all resources of a type.')
 
     args = parser.parse_args()
 
@@ -247,6 +253,27 @@ if __name__ == '__main__':
                 shutil.copy(source_file, destination_file)
             except FileNotFoundError:
                 print(f"File {source} not found in the script's directory.")
+
+    elif args.all is not None:
+        # Config
+        sys.path.insert(0, str(LOCATION))
+        from actions import ACTIONS
+
+        with open(os.path.join(LOCATION, 'projects.yaml'), 'r') as file:
+            data = yaml.safe_load(file)
+            projects = [Project(entry, data[entry].get('tags', []), data[entry].get(
+                'resources', [])) for entry in data.keys()]
+
+        # Do actions:
+        assert args.all[0] in ACTIONS
+        assert args.all[1] in ACTIONS[args.all[0]]
+
+        action_id = list(ACTIONS[args.all[0]]).index(args.all[1])
+
+        for proj in projects:
+            for res in proj.resources:
+                if res.type == args.all[0]:
+                    res.make_action(action_id, directory=LOCATION)
 
     else:
         # Config
@@ -304,6 +331,25 @@ if __name__ == '__main__':
                         elif keys == 'Keys.Down':
                             keys = 'down'
                         print(f"\t{keys} - {keyentry}")
+                    input('Press enter to go back ...')
+                elif manager.action == 'info':
+                    current_project = manager.projects[manager.choice_index[0]]
+                    current_resource = current_project.resources[manager.choice_index[1]]
+                    if manager.focus_index == 0:
+                        print("\n=== Info for project ===")
+                        print(f'Name: {current_project.name}')
+                        print(f'Tags: {current_project.tags}')
+                        print('Resources: ')
+                        [print('- ' + res.string())
+                         for res in current_project.resources]
+                        print('======')
+                    elif manager.focus_index == 1:
+                        print("\n=== Info for resource ===")
+                        print('In project:' + current_resource.project.string())
+                        print(f'Name: {current_resource.name}')
+                        print(f'Type: {current_resource.type}')
+                        print(f'Parameters: {current_resource.param}')
+                        print('======')
                     input('Press enter to go back ...')
 
                 # Reset action

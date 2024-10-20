@@ -9,7 +9,7 @@ def git_clone(dir, name, type, pname, param):
 
 def git_pull(dir, name, type, pname, param):
     path = os.path.join(dir, type, pname, name)
-    os.system(f"git pull '{path}'")
+    os.system(f"git -C '{path}' pull")
 
 
 def svn_checkout(dir, name, type, pname, param):
