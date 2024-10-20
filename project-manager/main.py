@@ -233,7 +233,7 @@ def main():
     global LOCATION
     global ACTIONS
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='python -m project-manager')
 
     parser.add_argument('LOCATION', type=Path,
                         help='Specify folder.')

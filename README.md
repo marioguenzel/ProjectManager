@@ -16,7 +16,16 @@ pip install git+https://github.com/marioguenzel/ProjectManager.git
 
 It can then be used as python module, i.e., 
 ```
-python -m project-manager [-h] [-i] [-a TYPE ACTION] LOCATION
+python -m usage: __main__.py [-h] [-i] [-a TYPE ACTION] LOCATION
+
+positional arguments:
+  LOCATION              Specify folder.
+
+options:
+  -h, --help            show this help message and exit
+  -i, --init            Initialilze a new project folder.
+  -a TYPE ACTION, --all TYPE ACTION
+                        Apply an action to all resources of a type.
 ```
 
 ## First Steps
