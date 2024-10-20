@@ -17,6 +17,10 @@ from prompt_toolkit import Application
 
 # === Resources and Projects ===
 
+LOCATION = '.'
+ACTIONS = dict()
+
+
 class Resource:
     def __init__(self, name, type, project=None, **kwargs):
         self.name = name
@@ -225,14 +229,17 @@ class WindowManager:
         return kb
 
 
-if __name__ == '__main__':
+def main():
+    global LOCATION
+    global ACTIONS
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('LOCATION', type=Path,
                         help='Specify folder.')
     parser.add_argument('-i', '--init', action='store_true',
                         help='Initialilze a new project folder.')
-    parser.add_argument('-a', '--all', nargs=2, metavar=['TYPE', 'ACTION'],
+    parser.add_argument('-a', '--all', nargs=2, metavar=('TYPE', 'ACTION'),
                         help='Apply an action to all resources of a type.')
 
     args = parser.parse_args()
@@ -354,3 +361,7 @@ if __name__ == '__main__':
 
                 # Reset action
                 manager.action = None
+
+
+if __name__ == "__main__":
+    main()
