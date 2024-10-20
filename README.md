@@ -2,7 +2,7 @@
 
 A simple project manager for resources like GIT, SVN, LINKS, etc.
 
-![sample image](.image.png)
+![sample image](image.png)
 
 ## Installation
 
