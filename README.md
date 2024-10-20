@@ -2,6 +2,8 @@
 
 A simple project manager for resources like GIT, SVN, LINKS, etc.
 
+![sample image](.image.png)
+
 ## Installation
 
 The manager requires python 3.11+.
