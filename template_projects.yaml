@@ -1,0 +1,16 @@
+2024-10 Project Manager:
+  tags: [orga]
+  resources:
+    Source Code:
+      type: GIT
+      source: https://github.com/marioguenzel/ProjectManager
+
+2023-09 Research paper on topic X:
+  tags: [research, topic X] 
+  resources:
+    Paper:
+      type: LINK
+      source: https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECRTS.2023.10
+    Source Code:
+      type: GIT
+      source: https://github.com/tu-dortmund-ls12-rt/mrt_mda
