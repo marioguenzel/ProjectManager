@@ -103,6 +103,10 @@ In the following are some tips how to get the most out of the project manager.
 ### Add project-manager to your path
 
 You might want to add the project manager to your path (i.e., define an alias in `~.zshrc` or alike) to access it easily. 
+I personally use the following alias:
+```
+alias pm="python -m project-manager <LOCATION>"
+```
 
 ### The `--all` option
 
