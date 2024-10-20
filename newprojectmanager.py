@@ -354,16 +354,3 @@ if __name__ == '__main__':
 
                 # Reset action
                 manager.action = None
-
-    # TODO: In Resource window: enter = standard action, a or shift+enter for choosing from list of actions (+ allow no action)
-    # TODO: new format for resources:
-    # resources:
-    #     Paper:
-    #         type: GIT
-    #         source: ...
-    #     Notes:
-    #         type: LINK
-    #         source: ...
-
-    # TODO: Show tags behind project name
-    # TODO: i: resource info
