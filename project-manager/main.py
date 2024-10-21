@@ -255,6 +255,10 @@ def main():
             source_file = os.path.join(script_dir, source)
             destination_file = os.path.join(LOCATION, destination)
 
+            if os.path.exists(destination):
+                if input(f'Overwrite {destination}? (y=yes)') != 'y':
+                    break
+
             # Copy the file
             try:
                 shutil.copy(source_file, destination_file)
