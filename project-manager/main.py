@@ -257,7 +257,7 @@ def main():
 
             if os.path.exists(destination):
                 if input(f'Overwrite {destination}? (y=yes)') != 'y':
-                    break
+                    continue
 
             # Copy the file
             try:
