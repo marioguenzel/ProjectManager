@@ -41,6 +41,11 @@ def iterm_folder(dir, name, type, pname, param):
     os.system(f"open -a iterm '{path}'")
 
 
+def show_channel_element(dir, name, type, pname, param):
+    os.system(
+        fr"open -a element element://vector/webapp/#/room/\!{param['source']}")
+
+
 # Map actions to resource types (top=default)
 ACTIONS = {
     "GIT": {
@@ -58,7 +63,7 @@ ACTIONS = {
         "remove": remove,
     },
     "ELEMENT": {
-        "show room": open_link,
+        "show room": show_channel_element,
     },
     "LINK": {
         "open link": open_link,
