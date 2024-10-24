@@ -61,26 +61,41 @@ Be sure to not give two projects (or two resources of the same project) the same
 
 Each project can be assigned a set of `tags` and a set of `resources`.
 Each resource must have a `type` defined. 
+Furthermore, a `folder` tag can be given. If no `folder` tag is assigned, it will automatically be set to `./TYPE/PROJECTNAME/RESOURCENAME`.
 The ordering of the projects when running the project manager is the same as in the `projects.yaml` file.
 The standard actions support the following file types:
 
 ### GIT
 ```
-Resource name:
+<Resource name>:
     type: GIT
     source: <Link>
+```
+or 
+```
+<Resource name>:
+    type: GIT
+    source: <Link>
+    folder: <Folder>
 ```
 
 ### SVN
 ```
-Resource name:
+<Resource name>:
     type: SVN
     source: <Link>
+```
+or 
+```
+<Resource name>:
+    type: SVN
+    source: <Link>
+    folder: <Folder>
 ```
 
 ### LINK
 ```
-Resource name:
+<Resource name>:
     type: LINK
     source: <Link>
 ```
@@ -89,7 +104,7 @@ This is especially useful, if you want to add the published paper or platform li
 
 ### ELEMENT
 ```
-Resource name:
+<Resource name>:
     type: ELEMENT
     source: <ID>
 ```
