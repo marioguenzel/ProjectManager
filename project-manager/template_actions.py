@@ -3,35 +3,29 @@ import os
 
 # == Define actions for resources ==
 def git_clone(dir, name, type, pname, param):
-    path = os.path.join(dir, type, pname, name)
-    os.system(f"git clone {param['source']} '{path}'")
+    os.system(f"git clone {param['source']} '{param['folder']}'")
 
 
 def git_pull(dir, name, type, pname, param):
-    path = os.path.join(dir, type, pname, name)
-    os.system(f"git -C '{path}' pull")
+    os.system(f"git -C '{param['folder']}' pull")
 
 
 def svn_checkout(dir, name, type, pname, param):
-    path = os.path.join(dir, type, pname, name)
-    os.system(f"svn checkout {param['source']} '{path}'")
+    os.system(f"svn checkout {param['source']} '{param['folder']}'")
 
 
 def svn_update(dir, name, type, pname, param):
-    path = os.path.join(dir, type, pname, name)
-    os.system(f"svn update '{path}'")
+    os.system(f"svn update '{param['folder']}'")
 
 
 def remove(dir, name, type, pname, param):
-    path = os.path.join(dir, type, pname, name)
-    if input(f'Remove {path}? (y=yes)') != 'y':
+    if input(f"Remove {param['folder']}? (y=yes)") != 'y':
         return
-    os.system(f"rm -rf '{path}'")
+    os.system(f"rm -rf '{param['folder']}'")
 
 
 def vscode(dir, name, type, pname, param):
-    path = os.path.join(dir, type, pname, name)
-    os.system(f"code '{path}'")
+    os.system(f"code '{param['folder']}'")
 
 
 def open_link(dir, name, type, pname, param):
@@ -39,8 +33,7 @@ def open_link(dir, name, type, pname, param):
 
 
 def iterm_folder(dir, name, type, pname, param):
-    path = os.path.join(dir, type, pname, name)
-    os.system(f"open -a iterm '{path}'")
+    os.system(f"open -a iterm '{param['folder']}'")
 
 
 def show_channel_element(dir, name, type, pname, param):

@@ -28,10 +28,20 @@ class Resource:
         self.param = kwargs
         self.project = project
 
+        # If folder variable is not set by parameter we try to set it here:
+        if 'folder' in self.param:
+            self.param['folder'] = os.path.join(LOCATION, self.param['folder'])
+        else:
+            try:
+                self.param['folder'] = os.path.join(
+                    LOCATION, self.type, self.project.name, self.name)
+            except:
+                pass
+
     def string(self):
         if self.type == 'GIT' or self.type == 'SVN':
             try:
-                if not os.path.exists(os.path.join(LOCATION, self.type, self.project.name, self.name)):
+                if not os.path.exists(self.param['folder']):
                     return f'({self.type}: {self.name})'
             except:
                 pass
