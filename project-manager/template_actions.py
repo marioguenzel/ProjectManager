@@ -24,6 +24,8 @@ def svn_update(dir, name, type, pname, param):
 
 def remove(dir, name, type, pname, param):
     path = os.path.join(dir, type, pname, name)
+    if input(f'Remove {path}? (y=yes)') != 'y':
+        return
     os.system(f"rm -rf '{path}'")
 
 
