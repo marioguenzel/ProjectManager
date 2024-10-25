@@ -113,6 +113,8 @@ The idea for an element room can be retrieved from the link (everything between 
 Links are of the form:
 `https://matrix.to/#/!<ID>?<OtherStuff>`
 
+You can also enter the whole link directly as source, and the project manager uses regular expressions to extract the ID.
+
 
 ## Modify Actions And Resource Types
 

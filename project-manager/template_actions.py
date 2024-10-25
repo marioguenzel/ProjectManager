@@ -1,4 +1,5 @@
 import os
+import re
 
 
 # == Define actions for resources ==
@@ -37,8 +38,20 @@ def iterm_folder(dir, name, type, pname, param):
 
 
 def show_channel_element(dir, name, type, pname, param):
+    # Extract information from link
+    if '!' in param['source'] and '?' in param['source']:
+        # Use regex to extract text between '!' and '?'
+        match = re.search(r'!(.*?)\?', param['source'])
+        if match:
+            ElementID = match.group(1)
+    elif '!' in param['source']:
+        # Extract everything after '!'
+        ElementID = param['source'].split('!', 1)[1]
+    else:
+        ElementID = param['source']
+
     os.system(
-        fr"open -a element element://vector/webapp/#/room/\!{param['source']}")
+        fr"open -a element element://vector/webapp/#/room/\!{ElementID}")
 
 
 # Map actions to resource types (top=default)
@@ -58,7 +71,8 @@ ACTIONS = {
         "remove": remove,
     },
     "ELEMENT": {
-        "show room": show_channel_element,
+        "show in app": show_channel_element,
+        "open link": open_link,
     },
     "LINK": {
         "open link": open_link,
