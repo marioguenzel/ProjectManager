@@ -294,6 +294,7 @@ def main():
         for proj in projects:
             for res in proj.resources:
                 if res.type == args.all[0]:
+                    print(f"{proj}: {res}")
                     res.make_action(action_id, directory=LOCATION)
 
     else:
